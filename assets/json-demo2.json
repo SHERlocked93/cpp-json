@@ -1,0 +1,21 @@
+{
+  "name": "Lily",
+  "age": "61",
+  "sex": "woman",
+  "kind": true,
+  "weight":	65.5,
+  "children": [
+    {
+      "name": "Lucy",
+      "age": "41",
+      "sex": "woman",
+      "skill": ["JAVA", "python"]
+    },
+    {
+      "name": "Tom",
+      "age": "38",
+      "sex": "man",
+      "skill": ["footbal"]
+    }
+  ]
+}
