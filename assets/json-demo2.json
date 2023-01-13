@@ -15,7 +15,12 @@
       "name": "Tom",
       "age": "38",
       "sex": "man",
-      "skill": ["footbal"]
+      "skill": ["footbal"],
+      "students":[
+         {"firstName":"minger","lastName":"minger","email":"123456@163.com","age":23,"height":1.67},
+         {"firstName":"jinmeng","lastName":"meng","email":"654321@163.com","age":18,"height":1.177},
+         {"email":"7891011@126.com","firstName":"chen","lastName":"jun","age":26,"height":1.75}
+      ]
     }
   ]
 }

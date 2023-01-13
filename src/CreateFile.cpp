@@ -8,13 +8,16 @@
 
 using namespace std;
 
-bool MvToFile(const char *src, const string& filePath, ios::ios_base::openmode mode) {
+bool MvToFile(const char *str,
+              const string &filePath,
+              ios::ios_base::openmode mode) {
     ofstream out(filePath, mode);
     
     if (!out) {
+        cout << "out file error!" << endl;
         return false;
     }
-    out << src;
+    out << str;
     
     out.close();
     

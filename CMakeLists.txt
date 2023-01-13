@@ -17,4 +17,4 @@ include_directories(tests)
 
 # 生成可执行文件
 add_executable(OBJECT
-        tests/write/write_demo1.cpp extlib/cJSON/cJSON.c tests/write/CreateFile.cpp include/CreateFile.h)
+        tests/main.cpp extlib/cJSON/cJSON.c src/CreateFile.cpp include/CreateFile.h src/ReadFile.cpp)

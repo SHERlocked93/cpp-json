@@ -12,8 +12,8 @@
 using namespace std;
 
 // 字符串存入json
-bool MvToFile(const char *src,
-              const string &filePath,
+bool MvToFile(const char *str,
+              const string& filePath,
               ios::ios_base::openmode mode);
 
 #endif //CPP_JSON_CREATEFILE_H
