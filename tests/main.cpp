@@ -46,7 +46,7 @@ void write() {
 }
 
 void read() {
-    char *str = nullptr;
+    string str;
     ReadFile(str, "../../assets/json-demo1.json", ios::in);
     
     cout << str << endl;

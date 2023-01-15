@@ -11,7 +11,7 @@
 
 using namespace std;
 
-bool ReadFile(char* &str,
+bool ReadFile(string &str,
               const string &filePath,
               ios::ios_base::openmode mode);
 
