@@ -14,7 +14,7 @@ bool SaveToFile(const char *str,
     ofstream out(filePath, mode);
     
     if (!out) {
-        cout << "out file error!" << endl;
+        cerr << "out file error!" << endl;
         return false;
     }
     out << str;

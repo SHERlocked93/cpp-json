@@ -15,7 +15,7 @@ bool ReadFile(string &str,
     ifstream in(filePath, mode);
     
     if (!in) {
-        cout << "read file error!" << endl;
+        cerr << "read file error!" << endl;
         return false;
     }
     
