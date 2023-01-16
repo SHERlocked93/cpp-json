@@ -15,13 +15,16 @@ using namespace std;
 #define DTE_ERROR           (HSME_START + 1)    // 发生异常
 #define DTE_MAINTAIN        (HSME_START + 2)    // 维护
 
+#define JSON_KEY        "dt"
 #define JSON_JOIN       "normal"
-#define JSON_DAMAGE      "damage"
+#define JSON_DAMAGE     "damage"
 #define JSON_MAINTAIN   "maintenance"
+
+static const string JsonPath = "../../assets/json-demo1.json";
+
 
 typedef struct DT_T {
     HSM parent;
-    cJSON *cjson;
 } DT;
 
 DT dt;
@@ -40,22 +43,31 @@ HSM_STATE DTS_NORMAL;        // 正常
 HSM_STATE DTS_DAMAGE;        // 异常
 HSM_STATE DTS_MAINTENANCE;   // 维护
 
-void Display(DT *This, const string &json_value) {
-    cout << cJSON_Print(This->cjson) << "---" << json_value << endl;
+void Display(cJSON *json_root, const char *json_value) {
+    cJSON *json_key = cJSON_GetObjectItem(json_root, JSON_KEY);
+    if (json_key == nullptr || json_key->type == cJSON_NULL) {
+        cJSON_AddStringToObject(json_root, JSON_KEY, json_value);
+    } else {
+        cJSON_ReplaceItemInObject(json_root, JSON_KEY, cJSON_CreateString(json_value));
+    }
+    string res = cJSON_Print(json_root);
+    
+    SaveToFile(res, JsonPath);
+    //cout << cJSON_Print(json_root) << "---" << json_value << endl;
 }
 
 HSM_EVENT DT_StateNormalHndlr(HSM *This, HSM_EVENT event, void *param) {
     if (event == DTE_ERROR) {
         HSM_Tran(This,
                  &DTS_DAMAGE,
-                 const_cast<char *>(JSON_DAMAGE),
-                 [](HSM *This, void *param) { Display((DT *) param, JSON_DAMAGE); });
+                 (cJSON *) param,
+                 [](HSM *This, void *param) { Display((cJSON *) param, JSON_DAMAGE); });
         return 0;
     } else if (event == DTE_MAINTAIN) {
         HSM_Tran(This,
                  &DTS_MAINTENANCE,
-                 const_cast<char *>(JSON_MAINTAIN),
-                 [](HSM *This, void *param) { Display((DT *) param, JSON_MAINTAIN); });
+                 (cJSON *) param,
+                 [](HSM *This, void *param) { Display((cJSON *) param, JSON_MAINTAIN); });
         return 0;
     }
     return event;
@@ -65,14 +77,14 @@ HSM_EVENT DT_StateDamageHndlr(HSM *This, HSM_EVENT event, void *param) {
     if (event == DTE_JOIN) {
         HSM_Tran(This,
                  &DTS_NORMAL,
-                 const_cast<char *>(JSON_JOIN),
-                 [](HSM *This, void *param) { Display((DT *) param, JSON_JOIN); });
+                 (cJSON *) param,
+                 [](HSM *This, void *param) { Display((cJSON *) param, JSON_JOIN); });
         return 0;
     } else if (event == DTE_MAINTAIN) {
         HSM_Tran(This,
                  &DTS_MAINTENANCE,
-                 const_cast<char *>(JSON_MAINTAIN),
-                 [](HSM *This, void *param) { Display((DT *) param, JSON_MAINTAIN); });
+                 (cJSON *) param,
+                 [](HSM *This, void *param) { Display((cJSON *) param, JSON_MAINTAIN); });
         return 0;
     }
     return event;
@@ -82,14 +94,14 @@ HSM_EVENT DT_StateMaintainanceHndlr(HSM *This, HSM_EVENT event, void *param) {
     if (event == DTE_JOIN) {
         HSM_Tran(This,
                  &DTS_NORMAL,
-                 const_cast<char *>(JSON_JOIN),
-                 [](HSM *This, void *param) { Display((DT *) param, JSON_JOIN); });
+                 (cJSON *) param,
+                 [](HSM *This, void *param) { Display((cJSON *) param, JSON_JOIN); });
         return 0;
     } else if (event == DTE_ERROR) {
         HSM_Tran(This,
                  &DTS_DAMAGE,
-                 const_cast<char *>(JSON_DAMAGE),
-                 [](HSM *This, void *param) { Display((DT *) param, JSON_DAMAGE); });
+                 (cJSON *) param,
+                 [](HSM *This, void *param) { Display((cJSON *) param, JSON_DAMAGE); });
         return 0;
     }
     return event;
@@ -108,11 +120,10 @@ const char *HSM_Evt2Str(uint32_t event) {
     }
 }
 
-void DT_Init(DT *This, char *name, cJSON *cjson) {
+void DT_Init(DT *This, char *name) {
     HSM_STATE_Create(&DTS_NORMAL, JSON_JOIN, DT_StateNormalHndlr, nullptr);
     HSM_STATE_Create(&DTS_DAMAGE, JSON_DAMAGE, DT_StateDamageHndlr, nullptr);
     HSM_STATE_Create(&DTS_MAINTENANCE, JSON_MAINTAIN, DT_StateMaintainanceHndlr, nullptr);
-    This->cjson = cjson;
     
     HSM_Create((HSM *) This, name, &DTS_NORMAL);
     
@@ -128,21 +139,15 @@ void DT_Run(DT *This, HSM_EVENT event, void *param = nullptr) {
 }
 
 int main() {
-    const string JsonPath = "../../assets/json-demo1.json";
     string res;
     ReadFile(res, JsonPath);
     cJSON *cjson_root = cJSON_Parse(res.c_str());
-    cJSON_ReplaceItemInObject(cjson_root, "sex", cJSON_CreateString("man"));
-    res = cJSON_Print(cjson_root);
     
-    SaveToFile(res, JsonPath);
+    DT_Init(&dt, const_cast<char *>("dt"));
     
-    
-    DT_Init(&dt, const_cast<char *>("dt"), cjson_root);
-    
-    DT_Run(&dt, DTE_ERROR);
-    DT_Run(&dt, DTE_MAINTAIN);
-    DT_Run(&dt, DTE_JOIN);
+    DT_Run(&dt, DTE_ERROR, cjson_root);
+    DT_Run(&dt, DTE_MAINTAIN, cjson_root);
+    DT_Run(&dt, DTE_JOIN, cjson_root);
     
     return 0;
 }
