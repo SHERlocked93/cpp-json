@@ -4,13 +4,13 @@
 #include <string>
 #include <fstream>
 #include <iostream>
-#include "CreateFile.h"
+#include "SaveToFile.h"
 
 using namespace std;
 
-bool MvToFile(const char *str,
-              const string &filePath,
-              ios::ios_base::openmode mode) {
+bool SaveToFile(const char *str,
+                const string &filePath,
+                ios::ios_base::openmode mode ) {
     ofstream out(filePath, mode);
     
     if (!out) {

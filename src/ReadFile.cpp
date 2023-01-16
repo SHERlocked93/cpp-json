@@ -4,13 +4,14 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include "ReadFile.h"
 
 using namespace std;
 
-static const int bufferLen = 2048;
-
-bool ReadFile(string &str, const string &filePath, ios::ios_base::openmode mode) {
+bool ReadFile(string &str,
+              const string &filePath,
+              ios::ios_base::openmode mode) {
     ifstream in(filePath, mode);
     
     if (!in) {
@@ -18,12 +19,9 @@ bool ReadFile(string &str, const string &filePath, ios::ios_base::openmode mode)
         return false;
     }
     
-    
-    char temp[bufferLen];
-    while (!in.eof()) {
-        in.read(temp, bufferLen);
-        str.append(temp);
-    }
+    stringstream buffer;
+    buffer << in.rdbuf();
+    str = buffer.str();
     
     in.close();
     
