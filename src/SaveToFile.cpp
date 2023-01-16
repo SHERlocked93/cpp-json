@@ -8,9 +8,9 @@
 
 using namespace std;
 
-bool SaveToFile(const char *str,
+bool SaveToFile(const string &str,
                 const string &filePath,
-                ios::ios_base::openmode mode ) {
+                ios::ios_base::openmode mode) {
     ofstream out(filePath, mode);
     
     if (!out) {
