@@ -53,7 +53,6 @@ void Display(cJSON *json_root, const char *json_value) {
     string res = cJSON_Print(json_root);
     
     SaveToFile(res, JsonPath);
-    //cout << cJSON_Print(json_root) << "---" << json_value << endl;
 }
 
 HSM_EVENT DT_StateNormalHndlr(HSM *This, HSM_EVENT event, void *param) {
@@ -145,9 +144,26 @@ int main() {
     
     DT_Init(&dt, const_cast<char *>("dt"));
     
-    DT_Run(&dt, DTE_ERROR, cjson_root);
-    DT_Run(&dt, DTE_MAINTAIN, cjson_root);
-    DT_Run(&dt, DTE_JOIN, cjson_root);
+    while (1) {
+        char inp;
+        cout << "输入 d:发生故障 m:维护 j:恢复正常 e:EXIT" << endl;
+        cin >> inp;
+        switch (inp) {
+            case 'd':
+                DT_Run(&dt, DTE_ERROR, cjson_root);
+                break;
+            case 'm':
+                DT_Run(&dt, DTE_MAINTAIN, cjson_root);
+                break;
+            case 'j':
+                DT_Run(&dt, DTE_JOIN, cjson_root);
+                break;
+            case 'e':
+                return 0;
+            default:;
+        }
+        cout << "当前json文件：" << cJSON_Print(cjson_root) << endl;
+    }
     
     return 0;
 }
