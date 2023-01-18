@@ -144,11 +144,11 @@ int main() {
     
     DT_Init(&dt, const_cast<char *>("dt"));
     
-    while (1) {
-        char inp;
+    while (true) {
+        char input;
         cout << "输入 d:发生故障 m:维护 j:恢复正常 e:EXIT" << endl;
-        cin >> inp;
-        switch (inp) {
+        cin >> input;
+        switch (input) {
             case 'd':
                 DT_Run(&dt, DTE_ERROR, cjson_root);
                 break;
