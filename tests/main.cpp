@@ -4,16 +4,19 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
+
 #include "SaveToFile.h"
 #include "ReadFile.h"
+#include "log_util.h"
 #include "hsm/hsm.h"
 #include "cJSON/cJSON.h"
 
 using namespace std;
 
 #define DTE_JOIN            (HSME_START)        // 变为正常 事件
-#define DTE_JOIN_N1         (HSME_START+1)        // 变为正常_试运行 事件
-#define DTE_JOIN_N2         (HSME_START+2)        // 变为正常_正式运行 事件
+#define DTE_JOIN_N1         (HSME_START + 1)    // 变为正常_试运行 事件
+#define DTE_JOIN_N2         (HSME_START + 2)    // 变为正常_正式运行 事件
 #define DTE_ERROR           (HSME_START + 3)    // 发生异常
 #define DTE_MAINTAIN        (HSME_START + 4)    // 维护
 
@@ -61,6 +64,9 @@ void Display(cJSON *json_root, const char *json_value) {
 }
 
 void State2Error(HSM *This, void *param) {
+    stringstream logInfo;
+    logInfo << "Tran " << JSON_KEY << "[" << This->curState << "\t->\t" << DTS_DAMAGE.name << "]";
+    logi(logInfo.str());
     HSM_Tran(This,
              &DTS_DAMAGE,
              (cJSON *) param,
@@ -100,6 +106,7 @@ HSM_EVENT DT_StateNormalHndlr(HSM *This, HSM_EVENT event, void *param) {
         State2Error(This, param);
         return EXIT_SUCCESS;
     } else if (event == DTE_MAINTAIN) {
+        cout << "asdfasdf" << endl;
         State2Maintain(This, param);
         return EXIT_SUCCESS;
     } else if (event == DTE_JOIN_N1) {
@@ -119,6 +126,8 @@ HSM_EVENT DT_StateNormalN1Hndlr(HSM *This, HSM_EVENT event, void *param) {
     } else if (event == DTE_JOIN_N2) {
         State2NormalN2(This, param);
         return EXIT_SUCCESS;
+    } else if (event == DTE_ERROR || event == DTE_MAINTAIN) {
+        return EXIT_FAILURE;
     }
     return event;
 }
@@ -130,6 +139,8 @@ HSM_EVENT DT_StateNormalN2Hndlr(HSM *This, HSM_EVENT event, void *param) {
     } else if (event == DTE_MAINTAIN) {
         State2Maintain(This, param);
         return EXIT_SUCCESS;
+    } else if (event == DTE_JOIN) {
+        return EXIT_FAILURE;
     }
     return event;
 }
@@ -156,19 +167,6 @@ HSM_EVENT DT_StateMaintainanceHndlr(HSM *This, HSM_EVENT event, void *param) {
     return event;
 }
 
-const char *HSM_Evt2Str(uint32_t event) {
-    switch (event) {
-        case DTE_ERROR:
-            return "DTE_ERROR";
-        case DTE_JOIN:
-            return "DTE_JOIN";
-        case DTE_MAINTAIN:
-            return "DTE_MAINTAIN";
-        default:
-            return "";
-    }
-}
-
 void DT_Init(DT *This, char *name) {
     HSM_STATE_Create(&DTS_NORMAL, JSON_JOIN, DT_StateNormalHndlr, nullptr);
     HSM_STATE_Create(&DTS_NORMAL_N1, JSON_JOIN_N1, DT_StateNormalN1Hndlr, &DTS_NORMAL);
@@ -190,6 +188,8 @@ void DT_Run(DT *This, HSM_EVENT event, void *param = nullptr) {
 }
 
 int main() {
+    ELOGLIB_Init();
+    
     string res;
     ReadFile(res, JsonPath);
     cJSON *cjson_root = cJSON_Parse(res.c_str());
