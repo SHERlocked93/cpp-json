@@ -3,8 +3,8 @@
 //
 
 #include <string>
-#include "elog.h"
-#include "elog_file.h"
+#include "easylogger/elog.h"
+#include "easylogger/elog_file.h"
 
 using namespace std;
 
@@ -23,7 +23,7 @@ void ELOGLIB_Init() {
     elog_set_fmt(ELOG_LVL_VERBOSE, ELOG_FMT_ALL & ~ELOG_FMT_FUNC);
 }
 
-void ELOGLIB_Deinit(){
+void ELOGLIB_Deinit() {
     elog_file_deinit();
 }
 

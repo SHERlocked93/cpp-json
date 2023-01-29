@@ -11,6 +11,7 @@
 #include "log_util.h"
 #include "hsm/hsm.h"
 #include "cJSON/cJSON.h"
+#include "easylogger/elog.h"
 
 using namespace std;
 
@@ -63,10 +64,14 @@ void Display(cJSON *json_root, const char *json_value) {
     SaveToFile(res, JsonPath);
 }
 
-void State2Error(HSM *This, void *param) {
+void log2file(HSM *This, HSM_STATE &state) {
     stringstream logInfo;
-    logInfo << "Tran " << JSON_KEY << "[" << This->curState << "\t->\t" << DTS_DAMAGE.name << "]";
+    logInfo << "Tran " << JSON_KEY << "[" << This->curState->name << "\t->\t" << state.name << "]\n";
     logi(logInfo.str());
+}
+
+void State2Error(HSM *This, void *param) {
+    log2file(This, DTS_DAMAGE);
     HSM_Tran(This,
              &DTS_DAMAGE,
              (cJSON *) param,
@@ -74,6 +79,7 @@ void State2Error(HSM *This, void *param) {
 }
 
 void State2Normal(HSM *This, void *param) {
+    log2file(This, DTS_NORMAL);
     HSM_Tran(This,
              &DTS_NORMAL,
              (cJSON *) param,
@@ -81,6 +87,7 @@ void State2Normal(HSM *This, void *param) {
 }
 
 void State2NormalN1(HSM *This, void *param) {
+    log2file(This, DTS_NORMAL_N1);
     HSM_Tran(This,
              &DTS_NORMAL_N1,
              (cJSON *) param,
@@ -88,6 +95,7 @@ void State2NormalN1(HSM *This, void *param) {
 }
 
 void State2NormalN2(HSM *This, void *param) {
+    log2file(This, DTS_NORMAL_N2);
     HSM_Tran(This,
              &DTS_NORMAL_N2,
              (cJSON *) param,
@@ -95,6 +103,7 @@ void State2NormalN2(HSM *This, void *param) {
 }
 
 void State2Maintain(HSM *This, void *param) {
+    log2file(This, DTS_MAINTENANCE);
     HSM_Tran(This,
              &DTS_MAINTENANCE,
              (cJSON *) param,
@@ -176,8 +185,8 @@ void DT_Init(DT *This, char *name) {
     
     HSM_Create((HSM *) This, name, &DTS_NORMAL);
     
-    HSM_SET_PREFIX((HSM *) This, "[DBG] ");
-    HSM_SET_DEBUG((HSM *) This, HSM_SHOW_ALL);
+    //HSM_SET_PREFIX((HSM *) This, "[DBG] ");
+    //HSM_SET_DEBUG((HSM *) This, HSM_SHOW_ALL);
 }
 
 //电台，正常，json数据里面写 dt：normal
