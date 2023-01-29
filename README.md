@@ -1,6 +1,6 @@
 # cpp-json
 
-使用 [HSM](https://github.com/howard-chan/HSM)、[cJSON](https://github.com/DaveGamble/cJSON)
+使用 [HSM](https://github.com/howard-chan/HSM)、[cJSON](https://github.com/DaveGamble/cJSON)、[EasyLogger](https://github.com/armink/EasyLogger)
 
 ## 编译运行
 

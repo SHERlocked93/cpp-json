@@ -12,27 +12,30 @@
 using namespace std;
 
 #define DTE_JOIN            (HSME_START)        // 变为正常 事件
-#define DTE_ERROR           (HSME_START + 1)    // 发生异常
-#define DTE_MAINTAIN        (HSME_START + 2)    // 维护
+#define DTE_JOIN_N1         (HSME_START+1)        // 变为正常_试运行 事件
+#define DTE_JOIN_N2         (HSME_START+2)        // 变为正常_正式运行 事件
+#define DTE_ERROR           (HSME_START + 3)    // 发生异常
+#define DTE_MAINTAIN        (HSME_START + 4)    // 维护
 
 #define JSON_KEY        "dt"
 #define JSON_JOIN       "normal"
+#define JSON_JOIN_N1    "normal.n1"
+#define JSON_JOIN_N2    "normal.n2"
 #define JSON_DAMAGE     "damage"
 #define JSON_MAINTAIN   "maintenance"
 
 static const string JsonPath = "../../assets/json-demo1.json";
 
-
 typedef struct DT_T {
-    HSM parent;
+    HSM parent{};
 } DT;
 
 DT dt;
 
 //     error       ┌──────────┐ maintain
-//   ┌─────────────┤          ├────────────┐
-//   │             │  Normal  │            │
-//   │  ┌─────────►│          │◄────────┐  │
+//   ┌─────────────┤  Normal  ├────────────┐
+//   │             │          │            │
+//   │  ┌─────────►│ n1 - n2  │◄────────┐  │
 //   │  │ join     └──────────┘  join   │  │
 //┌──▼──┴────┐                    ┌─────┴──▼─────┐
 //│          │◄───────────────────┤              │
@@ -40,6 +43,8 @@ DT dt;
 //│          ├────────────────────►              │
 //└──────────┘      maintain      └──────────────┘
 HSM_STATE DTS_NORMAL;        // 正常
+HSM_STATE DTS_NORMAL_N1;     // 正常 N1 试运行
+HSM_STATE DTS_NORMAL_N2;     // 正常 N2 正式运行
 HSM_STATE DTS_DAMAGE;        // 异常
 HSM_STATE DTS_MAINTENANCE;   // 维护
 
@@ -55,53 +60,98 @@ void Display(cJSON *json_root, const char *json_value) {
     SaveToFile(res, JsonPath);
 }
 
+void State2Error(HSM *This, void *param) {
+    HSM_Tran(This,
+             &DTS_DAMAGE,
+             (cJSON *) param,
+             [](HSM *This, void *param) { Display((cJSON *) param, JSON_DAMAGE); });
+}
+
+void State2Normal(HSM *This, void *param) {
+    HSM_Tran(This,
+             &DTS_NORMAL,
+             (cJSON *) param,
+             [](HSM *This, void *param) { Display((cJSON *) param, JSON_JOIN); });
+}
+
+void State2NormalN1(HSM *This, void *param) {
+    HSM_Tran(This,
+             &DTS_NORMAL_N1,
+             (cJSON *) param,
+             [](HSM *This, void *param) { Display((cJSON *) param, JSON_JOIN_N1); });
+}
+
+void State2NormalN2(HSM *This, void *param) {
+    HSM_Tran(This,
+             &DTS_NORMAL_N2,
+             (cJSON *) param,
+             [](HSM *This, void *param) { Display((cJSON *) param, JSON_JOIN_N2); });
+}
+
+void State2Maintain(HSM *This, void *param) {
+    HSM_Tran(This,
+             &DTS_MAINTENANCE,
+             (cJSON *) param,
+             [](HSM *This, void *param) { Display((cJSON *) param, JSON_MAINTAIN); });
+}
+
 HSM_EVENT DT_StateNormalHndlr(HSM *This, HSM_EVENT event, void *param) {
     if (event == DTE_ERROR) {
-        HSM_Tran(This,
-                 &DTS_DAMAGE,
-                 (cJSON *) param,
-                 [](HSM *This, void *param) { Display((cJSON *) param, JSON_DAMAGE); });
-        return 0;
+        State2Error(This, param);
+        return EXIT_SUCCESS;
     } else if (event == DTE_MAINTAIN) {
-        HSM_Tran(This,
-                 &DTS_MAINTENANCE,
-                 (cJSON *) param,
-                 [](HSM *This, void *param) { Display((cJSON *) param, JSON_MAINTAIN); });
-        return 0;
+        State2Maintain(This, param);
+        return EXIT_SUCCESS;
+    } else if (event == DTE_JOIN_N1) {
+        State2NormalN1(This, param);
+        return EXIT_SUCCESS;
+    } else if (event == DTE_JOIN_N2) {
+        State2NormalN2(This, param);
+        return EXIT_SUCCESS;
+    }
+    return event;
+}
+
+HSM_EVENT DT_StateNormalN1Hndlr(HSM *This, HSM_EVENT event, void *param) {
+    if (event == HSME_EXIT) {
+        State2Normal(This, param);
+        return EXIT_SUCCESS;
+    } else if (event == DTE_JOIN_N2) {
+        State2NormalN2(This, param);
+        return EXIT_SUCCESS;
+    }
+    return event;
+}
+
+HSM_EVENT DT_StateNormalN2Hndlr(HSM *This, HSM_EVENT event, void *param) {
+    if (event == DTE_ERROR) {
+        State2Error(This, param);
+        return EXIT_SUCCESS;
+    } else if (event == DTE_MAINTAIN) {
+        State2Maintain(This, param);
+        return EXIT_SUCCESS;
     }
     return event;
 }
 
 HSM_EVENT DT_StateDamageHndlr(HSM *This, HSM_EVENT event, void *param) {
     if (event == DTE_JOIN) {
-        HSM_Tran(This,
-                 &DTS_NORMAL,
-                 (cJSON *) param,
-                 [](HSM *This, void *param) { Display((cJSON *) param, JSON_JOIN); });
-        return 0;
+        State2Normal(This, param);
+        return EXIT_SUCCESS;
     } else if (event == DTE_MAINTAIN) {
-        HSM_Tran(This,
-                 &DTS_MAINTENANCE,
-                 (cJSON *) param,
-                 [](HSM *This, void *param) { Display((cJSON *) param, JSON_MAINTAIN); });
-        return 0;
+        State2Maintain(This, param);
+        return EXIT_SUCCESS;
     }
     return event;
 }
 
 HSM_EVENT DT_StateMaintainanceHndlr(HSM *This, HSM_EVENT event, void *param) {
     if (event == DTE_JOIN) {
-        HSM_Tran(This,
-                 &DTS_NORMAL,
-                 (cJSON *) param,
-                 [](HSM *This, void *param) { Display((cJSON *) param, JSON_JOIN); });
-        return 0;
+        State2Normal(This, param);
+        return EXIT_SUCCESS;
     } else if (event == DTE_ERROR) {
-        HSM_Tran(This,
-                 &DTS_DAMAGE,
-                 (cJSON *) param,
-                 [](HSM *This, void *param) { Display((cJSON *) param, JSON_DAMAGE); });
-        return 0;
+        State2Error(This, param);
+        return EXIT_SUCCESS;
     }
     return event;
 }
@@ -121,6 +171,8 @@ const char *HSM_Evt2Str(uint32_t event) {
 
 void DT_Init(DT *This, char *name) {
     HSM_STATE_Create(&DTS_NORMAL, JSON_JOIN, DT_StateNormalHndlr, nullptr);
+    HSM_STATE_Create(&DTS_NORMAL_N1, JSON_JOIN_N1, DT_StateNormalN1Hndlr, &DTS_NORMAL);
+    HSM_STATE_Create(&DTS_NORMAL_N2, JSON_JOIN_N2, DT_StateNormalN2Hndlr, &DTS_NORMAL);
     HSM_STATE_Create(&DTS_DAMAGE, JSON_DAMAGE, DT_StateDamageHndlr, nullptr);
     HSM_STATE_Create(&DTS_MAINTENANCE, JSON_MAINTAIN, DT_StateMaintainanceHndlr, nullptr);
     
@@ -146,7 +198,7 @@ int main() {
     
     while (true) {
         char input;
-        cout << "输入 d:发生故障 m:维护 j:恢复正常 e:EXIT" << endl;
+        cout << "输入 d:发生故障 \nm:维护  \nn:恢复正常 \n\t1:试运行 \n\t2:正式运行 \ne:退出当前状态 \nE:EXIT" << endl;
         cin >> input;
         switch (input) {
             case 'd':
@@ -155,16 +207,25 @@ int main() {
             case 'm':
                 DT_Run(&dt, DTE_MAINTAIN, cjson_root);
                 break;
-            case 'j':
+            case 'n':
                 DT_Run(&dt, DTE_JOIN, cjson_root);
                 break;
+            case '1':
+                DT_Run(&dt, DTE_JOIN_N1, cjson_root);
+                break;
+            case '2':
+                DT_Run(&dt, DTE_JOIN_N2, cjson_root);
+                break;
             case 'e':
-                return 0;
+                DT_Run(&dt, HSME_EXIT, cjson_root);
+                break;
+            case 'E':
+                return EXIT_SUCCESS;
             default:;
         }
         cout << "当前json文件：" << cJSON_Print(cjson_root) << endl;
     }
     
-    return 0;
+    return EXIT_SUCCESS;
 }
 
