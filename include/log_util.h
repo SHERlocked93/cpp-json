@@ -16,4 +16,6 @@ void logi(const string &msg);
 
 void loge(const string &msg);
 
+string getTime();
+
 #endif //CPP_JSON_LOG_UTIL_H

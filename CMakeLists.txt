@@ -11,15 +11,16 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)  # 指定最终的目标�
 
 
 include_directories(extlib)   # 包含的头文件目录
+include_directories(extlib/easylogger)   # 包含的头文件目录
 include_directories(lib)
 include_directories(include)
 include_directories(src)
 include_directories(tests)
 
 #Generate the static library from the library sources
-aux_source_directory("extlib/easylogger" DIR_SRCS)
-add_library(elog_lib STATIC ${DIR_SRCS})
-target_include_directories(elog_lib PUBLIC extlib/easylogger)
+#aux_source_directory("extlib/easylogger" DIR_SRCS)
+#add_library(elog_lib STATIC ${DIR_SRCS})
+#target_include_directories(elog_lib PUBLIC extlib/easylogger)
 
 
 # 生成可执行文件
@@ -28,7 +29,16 @@ add_executable(OBJECT
         tests/log_util.cpp
         src/SaveToFile.cpp
         src/ReadFile.cpp
-        extlib/cJSON/cJSON.c
-        extlib/hsm/hsm.c)
 
-target_link_libraries(OBJECT PRIVATE elog_lib)
+        extlib/cJSON/cJSON.c
+        extlib/hsm/hsm.c
+
+        extlib/easylogger/elog.c
+        extlib/easylogger/elog_async.c
+        extlib/easylogger/elog_buf.c
+        extlib/easylogger/elog_file.c
+        extlib/easylogger/elog_file_port.c
+        extlib/easylogger/elog_port.c
+        extlib/easylogger/elog_utils.c)
+
+#target_link_libraries(OBJECT PRIVATE elog_lib)

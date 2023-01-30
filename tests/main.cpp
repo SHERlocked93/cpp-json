@@ -66,7 +66,7 @@ void Display(cJSON *json_root, const char *json_value) {
 
 void log2file(HSM *This, HSM_STATE &state) {
     stringstream logInfo;
-    logInfo << "Tran " << JSON_KEY << "[" << This->curState->name << "\t->\t" << state.name << "]\n";
+    logInfo << getTime() << "\tTran " << JSON_KEY << "[" << This->curState->name << "\t->\t" << state.name << "]\n";
     logi(logInfo.str());
 }
 

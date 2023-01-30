@@ -3,6 +3,8 @@
 //
 
 #include <string>
+#include <time.h>
+
 #include "easylogger/elog.h"
 #include "easylogger/elog_file.h"
 
@@ -35,4 +37,15 @@ void logi(const string &msg) {
 void loge(const string &msg) {
     elog_file_write(msg.c_str(), msg.length());
     log_e(msg.c_str());
+}
+
+
+using namespace std;
+
+string getTime() {
+    time_t timep;
+    time(&timep);
+    char tmp[64];
+    strftime(tmp, sizeof(tmp), "%Y-%m-%d %H:%M:%S", localtime(&timep));
+    return tmp;
 }
